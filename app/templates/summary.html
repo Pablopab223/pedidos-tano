@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Resumen{% endblock %}
+{% block content %}
+	<div class="flex items-center justify-between mb-6">
+		<h1 class="text-2xl font-semibold">Resumen de pedidos ({{ month_label }})</h1>
+		{% if config.DEBUG %}
+			<a href="{{ url_for('main.seed_demo') }}" class="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-800 text-sm">Generar datos demo</a>
+		{% endif %}
+	</div>
+
+	<div class="grid md:grid-cols-3 gap-6 mb-8">
+		<div class="p-4 border rounded">
+			<div class="text-sm text-neutral-500">Pedidos entregados</div>
+			<div class="text-2xl font-semibold">{{ total_orders }}</div>
+		</div>
+		<div class="p-4 border rounded">
+			<div class="text-sm text-neutral-500">Por local</div>
+			<ul class="mt-2 space-y-2">
+				{% for loc, cnt in sorted_locations %}
+					<li>
+						<div class="flex items-center justify-between text-sm">
+							<span>{{ loc|capitalize }}</span>
+							<span class="font-medium">{{ cnt }}</span>
+						</div>
+						<div class="h-2 bg-neutral-200 rounded">
+							<div class="h-2 bg-neutral-900 rounded" style="width: {{ (cnt / (max_location_count or 1) * 100) | round(0) }}%"></div>
+						</div>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+		<div class="p-4 border rounded">
+			<div class="text-sm text-neutral-500">Unidades por producto</div>
+			<ul class="mt-2 space-y-2">
+				{% for prod, cnt in sorted_products %}
+					<li>
+						<div class="flex items-center justify-between text-sm">
+							<span>{{ prod }}</span>
+							<span class="font-medium">{{ cnt }}</span>
+						</div>
+						<div class="h-2 bg-neutral-200 rounded">
+							<div class="h-2 bg-neutral-900 rounded" style="width: {{ (cnt / (max_product_count or 1) * 100) | round(0) }}%"></div>
+						</div>
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+
+	<div class="grid md:grid-cols-2 gap-6 mb-10">
+		<div class="p-4 border rounded">
+			<div class="mb-4 font-medium">Rueda: pedidos por local</div>
+			<div class="flex items-center gap-6">
+				<div class="relative w-44 h-44 rounded-full" style="background: {{ location_gradient }}">
+					<div class="absolute inset-6 bg-white rounded-full flex items-center justify-center text-sm text-neutral-600">
+						{{ total_location }} pedidos
+					</div>
+				</div>
+				<ul class="flex-1 space-y-2">
+					{% for s in location_segments %}
+						<li class="flex items-center justify-between text-sm">
+							<span class="flex items-center gap-2">
+								<span class="inline-block w-3 h-3 rounded" style="background: {{ s.color }}"></span>
+								{{ s.label|capitalize }}
+							</span>
+							<span class="font-medium">{{ s.count }}</span>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+		<div class="p-4 border rounded">
+			<div class="mb-4 font-medium">Rueda: unidades por producto (top 5)</div>
+			<div class="flex items-center gap-6">
+				<div class="relative w-44 h-44 rounded-full" style="background: {{ product_gradient }}">
+					<div class="absolute inset-6 bg-white rounded-full flex items-center justify-center text-sm text-neutral-600">
+						{{ total_product_units }} uds
+					</div>
+				</div>
+				<ul class="flex-1 space-y-2">
+					{% for s in product_segments %}
+						<li class="flex items-center justify-between text-sm">
+							<span class="flex items-center gap-2">
+								<span class="inline-block w-3 h-3 rounded" style="background: {{ s.color }}"></span>
+								{{ s.label }}
+							</span>
+							<span class="font-medium">{{ s.count }}</span>
+						</li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<div class="overflow-x-auto">
+		<table class="min-w-full text-sm border border-neutral-200 rounded overflow-hidden">
+			<thead class="bg-neutral-100">
+				<tr>
+					<th class="text-left p-3">#</th>
+					<th class="text-left p-3">Cliente</th>
+					<th class="text-left p-3">Productos</th>
+					<th class="text-left p-3">Fecha/Hora</th>
+					<th class="text-left p-3">Teléfono</th>
+					<th class="text-left p-3">Local</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% if groups and groups|length > 0 %}
+					{% for g in groups %}
+						<tr class="bg-neutral-50 border-t">
+							<td class="p-3 font-medium text-neutral-700" colspan="6">{{ g.label }}</td>
+						</tr>
+						{% for o in g.orders %}
+							<tr class="border-t">
+								<td class="p-3">{{ o.id }}</td>
+								<td class="p-3">{{ o.customer_name }}</td>
+								<td class="p-3">
+									{% if o.items %}
+										{% for it in o.items %}
+											<span class="inline-block mr-2">{{ it.product }} x{{ it.quantity }}</span>
+										{% endfor %}
+									{% else %}
+										{{ o.product }} x{{ o.quantity }}
+									{% endif %}
+								</td>
+								<td class="p-3 whitespace-nowrap">{{ o.pickup_datetime.strftime('%d/%m/%Y %H:%M') }}</td>
+								<td class="p-3">{{ o.phone }}</td>
+								<td class="p-3">{{ o.location|capitalize }}</td>
+							</tr>
+						{% endfor %}
+					{% endfor %}
+				{% else %}
+					<tr>
+						<td class="p-4 text-neutral-500" colspan="6">Sin pedidos entregados este mes.</td>
+					</tr>
+				{% endif %}
+			</tbody>
+		</table>
+	</div>
+{% endblock %}
+
+

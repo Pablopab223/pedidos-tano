@@ -1,0 +1,46 @@
+# Entorno y dependencias
+.venv/
+__pycache__/
+*.pyc
+
+# Entornos
+.env
+
+# Base de datos local
+instance/*.db
+instance/*.sqlite3
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+.build/
+.eggs/
+*.egg-info/
+*.egg
+
+# Envs
+.env
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask instance data
+instance/
+
+# IDE
+.vscode/
+.idea/
+

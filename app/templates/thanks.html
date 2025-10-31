@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}¡Gracias!{% endblock %}
+{% block content %}
+	<section class="max-w-xl">
+		<h1 class="text-2xl font-semibold mb-3">¡Gracias por tu encargo!</h1>
+		<p class="text-neutral-600">Te contactaremos si necesitamos confirmar algún detalle. ¡Nos vemos en la fecha acordada!</p>
+		<div class="mt-6">
+			<a href="{{ url_for('main.index') }}" class="text-sm underline">Volver al inicio</a>
+		</div>
+	</section>
+{% endblock %}
+

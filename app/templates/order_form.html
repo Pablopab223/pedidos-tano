@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Nuevo encargo{% endblock %}
+{% block content %}
+	<h1 class="text-2xl font-semibold mb-6">Nuevo pedido</h1>
+	<form method="post" id="orderForm" class="grid md:grid-cols-2 gap-6">
+		<div class="space-y-4">
+			<div>
+				<label class="block text-sm mb-1" for="customer_name">Nombre y apellido</label>
+				<input class="w-full border border-neutral-300 rounded px-3 py-2" type="text" id="customer_name" name="customer_name" required value="{{ (form.customer_name if form else '')|e }}" />
+			</div>
+			<div>
+				<label class="block text-sm mb-1" for="phone">Teléfono</label>
+				<input class="w-full border border-neutral-300 rounded px-3 py-2" type="tel" id="phone" name="phone" required value="{{ (form.phone if form else '')|e }}" />
+			</div>
+
+			<div>
+				<label class="block text-sm mb-1" for="location">Local</label>
+				<select class="w-full border border-neutral-300 rounded px-3 py-2" id="location" name="location" required>
+					{% set loc = (form.location if form else '') %}
+					<option value="">Selecciona…</option>
+					<option value="vilanova" {{ 'selected' if loc=='vilanova' else '' }}>Vilanova</option>
+					<option value="hospital" {{ 'selected' if loc=='hospital' else '' }}>Hospital</option>
+				</select>
+			</div>
+
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<label class="block text-sm mb-1" for="pickup_date">Fecha retiro</label>
+					<input class="w-full border border-neutral-300 rounded px-3 py-2" type="date" id="pickup_date" name="pickup_date" required value="{{ (form.pickup_date if form else '')|e }}" />
+				</div>
+				<div>
+					<label class="block text-sm mb-1" for="pickup_time">Hora retiro</label>
+					<input class="w-full border border-neutral-300 rounded px-3 py-2" type="time" id="pickup_time" name="pickup_time" required value="{{ (form.pickup_time if form else '')|e }}" />
+				</div>
+			</div>
+			<div>
+				<label class="block text-sm mb-1" for="message">Mensaje (opcional)</label>
+				<input class="w-full border border-neutral-300 rounded px-3 py-2" type="text" id="message" name="message" value="{{ (form.message if form else '')|e }}" />
+			</div>
+		</div>
+
+		<div class="space-y-4">
+			<div>
+				<label class="block text-sm mb-1" for="product">Producto</label>
+				<div class="grid grid-cols-12 gap-3 items-end">
+					<div class="col-span-7">
+						<select class="w-full border border-neutral-300 rounded px-3 py-2" id="product" name="product">
+							{% set selected = (form.product if form else '') %}
+							<option value="">Selecciona…</option>
+							<option value="chocotano">Chocotano</option>
+							<option value="croissant farcit">Croissant farcit</option>
+							<option value="mamelleta">Mamelleta</option>
+							<option value="pastiset tomaca">Pastiset tomaca</option>
+							<option value="pastiset pessols">Pastiset pessols</option>
+							<option value="pastissets espinacs">Pastissets espinacs</option>
+							<option value="tartas">Tartas</option>
+							<option value="otro">Otro</option>
+						</select>
+					</div>
+					<div class="col-span-5">
+						<input class="w-full border border-neutral-300 rounded px-3 py-2" type="text" id="product_other" placeholder="Especificar (si Otro)" />
+					</div>
+					<div class="col-span-4">
+						<label class="block text-sm mb-1" for="item_qty">Cantidad</label>
+						<input class="w-full border border-neutral-300 rounded px-3 py-2" type="number" id="item_qty" min="1" value="1" />
+					</div>
+					<div class="col-span-8 flex justify-end">
+						<button type="button" id="addItemBtn" class="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-800">Añadir a cesta</button>
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<label class="block text-sm mb-2">Cesta</label>
+				<div id="cartEmpty" class="text-neutral-500 text-sm">Vacía. Añade productos con el botón de arriba.</div>
+				<div id="cartList" class="hidden border border-neutral-200 rounded divide-y"></div>
+				<div class="mt-2 flex justify-end gap-2">
+					<button type="button" id="clearCartBtn" class="text-sm underline">Vaciar cesta</button>
+				</div>
+				<input type="hidden" name="items_json" id="items_json" />
+			</div>
+		</div>
+
+		<div class="md:col-span-2 flex items-center justify-end gap-3">
+			<a class="px-4 py-2 border rounded" href="{{ url_for('main.admin_pedidos') }}">Cancelar</a>
+			<button class="px-5 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-800" type="submit">Guardar pedido</button>
+		</div>
+	</form>
+
+	<script>
+		(function() {
+			const productEl = document.getElementById('product');
+			const otherEl = document.getElementById('product_other');
+			const qtyEl = document.getElementById('item_qty');
+			const listEl = document.getElementById('cartList');
+			const emptyEl = document.getElementById('cartEmpty');
+			const itemsInput = document.getElementById('items_json');
+			const addBtn = document.getElementById('addItemBtn');
+			const clearBtn = document.getElementById('clearCartBtn');
+			const form = document.getElementById('orderForm');
+
+			let items = [];
+
+			function render() {
+				if (items.length === 0) {
+					listEl.classList.add('hidden');
+					emptyEl.classList.remove('hidden');
+				} else {
+					listEl.classList.remove('hidden');
+					emptyEl.classList.add('hidden');
+					listEl.innerHTML = items.map((it, idx) => (
+						`<div class="flex items-center justify-between px-3 py-2">`
+						+ `<div class="truncate">${it.product === 'otro' ? (it.custom_name || 'Otro') : it.product} x${it.quantity}</div>`
+						+ `<button type="button" data-idx="${idx}" class="text-sm text-rose-700 hover:underline removeItem">Quitar</button>`
+						+ `</div>`
+					)).join('');
+				}
+				itemsInput.value = JSON.stringify(items);
+			}
+
+			addBtn.addEventListener('click', () => {
+				const p = (productEl.value || '').trim();
+				let q = parseInt(qtyEl.value, 10);
+				if (!p) return alert('Selecciona un producto');
+				if (!q || q < 1) q = 1;
+				const payload = { product: p, quantity: q };
+				if (p === 'otro') {
+					const custom = (otherEl.value || '').trim();
+					if (!custom) return alert('Especifica el producto en "Otro"');
+					payload.custom_name = custom;
+				}
+				items.push(payload);
+				otherEl.value = '';
+				qtyEl.value = '1';
+				render();
+			});
+
+			listEl.addEventListener('click', (e) => {
+				const btn = e.target.closest('.removeItem');
+				if (!btn) return;
+				const idx = parseInt(btn.getAttribute('data-idx'), 10);
+				if (!isNaN(idx)) items.splice(idx, 1);
+				render();
+			});
+
+			clearBtn.addEventListener('click', () => {
+				items = [];
+				render();
+			});
+
+			form.addEventListener('submit', (e) => {
+				if (items.length === 0) {
+					e.preventDefault();
+					alert('Añade al menos un producto a la cesta');
+				}
+			});
+
+			render();
+		})();
+	</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Panel interno{% endblock %}
+{% block content %}
+	<section class="py-8">
+		<div class="space-y-3 max-w-xl">
+			<h1 class="text-3xl font-semibold tracking-tight">Panel interno</h1>
+			<p class="text-neutral-600">Inicia sesión para gestionar los pedidos.</p>
+			<div>
+				<a href="{{ url_for('main.login') }}" class="inline-flex items-center px-5 py-3 bg-neutral-900 text-white rounded hover:bg-neutral-800">Entrar</a>
+			</div>
+		</div>
+	</section>
+{% endblock %}

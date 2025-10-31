@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Pedidos{% endblock %}
+{% block content %}
+	<div class="flex items-center justify-between mb-6">
+		<h1 class="text-2xl font-semibold">Pedidos</h1>
+		<a href="{{ url_for('main.admin_pedido_nuevo') }}" class="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-800 text-sm">Nuevo pedido</a>
+	</div>
+	<div class="overflow-x-auto">
+		<table class="min-w-full text-sm border border-neutral-200 rounded overflow-hidden">
+			<thead class="bg-neutral-100">
+				<tr>
+					<th class="text-left p-3">#</th>
+					<th class="text-left p-3">Fecha creación</th>
+					<th class="text-left p-3">Cliente</th>
+					<th class="text-left p-3">Productos</th>
+					<th class="text-left p-3">Hora</th>
+					<th class="text-left p-3">Teléfono</th>
+					<th class="text-left p-3">Local</th>
+					<th class="text-left p-3">Estado</th>
+					<th class="text-left p-3">Acciones</th>
+					<th class="text-left p-3">Detalle</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% if groups and groups|length > 0 %}
+					{% for g in groups %}
+						<tr class="bg-neutral-50 border-t">
+							<td class="p-3 font-medium text-neutral-700" colspan="10">{{ g.label }}</td>
+						</tr>
+						{% for o in g.orders %}
+							<tr class="border-t">
+								<td class="p-3">{{ o.id }}</td>
+								<td class="p-3 whitespace-nowrap">{{ o.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+								<td class="p-3">{{ o.customer_name }}</td>
+								<td class="p-3">
+									{% if o.items %}
+										{% for it in o.items %}
+											<span class="inline-block mr-2">{{ it.product }} x{{ it.quantity }}</span>
+										{% endfor %}
+									{% else %}
+										{{ o.product }} x{{ o.quantity }}
+									{% endif %}
+								</td>
+								<td class="p-3 whitespace-nowrap">
+									<span class="inline-flex items-center px-2 py-1 rounded bg-neutral-900 text-white font-medium">{{ o.pickup_datetime.strftime('%d/%m/%Y %H:%M') }}</span>
+								</td>
+								<td class="p-3">{{ o.phone }}</td>
+								<td class="p-3">{{ o.location|capitalize }}</td>
+								<td class="p-3">{{ o.status }}</td>
+								<td class="p-3">
+									<form method="post" action="{{ url_for('main.update_order_status', order_id=o.id) }}" class="flex items-center gap-2">
+										<select name="status" class="border border-neutral-300 rounded px-2 py-1">
+											{% for st in allowed_statuses %}
+												<option value="{{ st }}" {{ 'selected' if o.status==st else '' }}>{{ st|capitalize }}</option>
+											{% endfor %}
+										</select>
+										<button class="px-3 py-1 bg-neutral-900 text-white rounded hover:bg-neutral-800" type="submit">Guardar</button>
+									</form>
+								</td>
+								<td class="p-3">
+									<button type="button" class="text-sm underline toggleDetails" data-id="{{ o.id }}">Ver</button>
+								</td>
+							</tr>
+							<tr id="details-{{ o.id }}" class="hidden bg-neutral-50 border-t">
+								<td class="p-4" colspan="10">
+									<div class="grid md:grid-cols-3 gap-6">
+										<div>
+											<h3 class="font-medium mb-2">Cliente</h3>
+											<div class="text-neutral-700">{{ o.customer_name }}</div>
+											<div class="text-neutral-500 text-sm">{{ o.phone }}</div>
+										</div>
+										<div>
+											<h3 class="font-medium mb-2">Retiro</h3>
+											<div class="text-neutral-700">{{ o.pickup_datetime.strftime('%d/%m/%Y %H:%M') }}</div>
+											<div class="text-neutral-500 text-sm">Local: {{ o.location|capitalize }}</div>
+										</div>
+										<div>
+											<h3 class="font-medium mb-2">Mensaje</h3>
+											<div class="text-neutral-700">{{ o.message or '—' }}</div>
+										</div>
+										<div class="md:col-span-3">
+											<h3 class="font-medium mb-2">Productos</h3>
+											<ul class="list-disc pl-5 space-y-1 text-neutral-700">
+												{% if o.items %}
+													{% for it in o.items %}
+														<li>{{ it.product }} × {{ it.quantity }}</li>
+													{% endfor %}
+												{% else %}
+													<li>{{ o.product }} × {{ o.quantity }}</li>
+												{% endif %}
+											</ul>
+										</div>
+									</div>
+								</td>
+							</tr>
+						{% endfor %}
+					{% endfor %}
+				{% else %}
+					<tr>
+						<td class="p-4 text-neutral-500" colspan="10">Sin pedidos por el momento.</td>
+					</tr>
+				{% endif %}
+			</tbody>
+		</table>
+	</div>
+
+	<script>
+		(function(){
+			document.addEventListener('click', function(e){
+				const btn = e.target.closest('.toggleDetails');
+				if(!btn) return;
+				const id = btn.getAttribute('data-id');
+				const row = document.getElementById('details-' + id);
+				if(!row) return;
+				row.classList.toggle('hidden');
+				btn.textContent = row.classList.contains('hidden') ? 'Ver' : 'Ocultar';
+			});
+		})();
+	</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Pedidos Tano – {% block title %}{% endblock %}</title>
+		<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+	</head>
+	<body class="min-h-screen bg-neutral-50 text-neutral-900">
+		<header class="border-b border-neutral-200 bg-white">
+			<div class="max-w-6xl mx-auto px-4 py-0 flex items-center justify-between">
+				<a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
+					<img src="{{ url_for('static', filename='img/logo.png') }}" alt="Pedidos Tano" class="h-[100px] w-auto" />
+					<span class="sr-only">Pedidos Tano</span>
+				</a>
+				<nav class="flex items-center gap-4 text-sm">
+					<a class="hover:underline" href="{{ url_for('main.admin_pedidos') }}">Pedidos</a>
+					<a class="hover:underline" href="{{ url_for('main.admin_pedido_nuevo') }}">Nuevo pedido</a>
+					<a class="hover:underline" href="{{ url_for('main.admin_resumen') }}">Resumen</a>
+				</nav>
+			</div>
+		</header>
+
+		<main class="max-w-6xl mx-auto px-4 py-8">
+			{% with messages = get_flashed_messages(with_categories=true) %}
+				{% if messages %}
+					<div class="space-y-2 mb-6">
+						{% for category, message in messages %}
+							<div class="px-4 py-3 rounded border {{ 'border-emerald-300 bg-emerald-50 text-emerald-800' if category=='success' else 'border-rose-300 bg-rose-50 text-rose-800' }}">
+								{{ message }}
+							</div>
+						{% endfor %}
+					</div>
+				{% endif %}
+			{% endwith %}
+
+			{% block content %}{% endblock %}
+		</main>
+
+		<footer class="border-t border-neutral-200 bg-white mt-16">
+			<div class="max-w-6xl mx-auto px-4 py-6 text-sm text-neutral-500">
+				© {{ 2025 }} Pedidos Tano
+			</div>
+		</footer>
+	</body>
+</html>
